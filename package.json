@@ -1,0 +1,17 @@
+{
+  "name": "module_3_assignment_lab",
+  "version": "1.0.0",
+  "description": "",
+  "main": "migrate-data.js",
+  "dependencies": {
+    "async": "2.6.0",
+    "mongodb": "3.0.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
