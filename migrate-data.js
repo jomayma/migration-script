@@ -34,7 +34,7 @@ QueryObject.prototype.setAddresses = function(a) {
 }
 
 
-QueryObject.prototype.queryAddresses = function (qObj, callback) {
+QueryObject.prototype.queryAddresses = function (qObj, innercallback, callback) {
     coll = qObj.addresses
     coll.toArray(function(error,addArr) {
         if (error) {
@@ -42,33 +42,36 @@ QueryObject.prototype.queryAddresses = function (qObj, callback) {
         } else if (addArr.length > 0) {
             qObj.addressArray=addArr
             //console.log("in queryAddresses addArr.length ",addArr.length)
-            console.log("in queryAddresses addressArray.length ",qObj.addressArray.length
-            , " addressArray[0].city=",qObj.addressArray[0].city)
-            console.log("QueryObject.prototype.queryAddresses from ",qObj.from," to ", qObj.to)
-            callback(qObj)
+            console.log("Into QueryObject.prototype.queryAddresses from "
+            ,qObj.from," to ", qObj.to," addressArray.length ",qObj.addressArray.length
+            , " addressArray[0].city=",qObj.addressArray[0].city
+            , " addressArray[1].city=",qObj.addressArray[1].city
+            , " addressArray[98].city=",qObj.addressArray[98].city
+            , " addressArray[99].city=",qObj.addressArray[99].city)
+            console.log()
+            innercallback(qObj, callback)
         }
     })
 }
 
-QueryObject.prototype.updateCustomers = function (qObj){
+QueryObject.prototype.updateCustomers = function (qObj, callback){
     console.log("handle callback updateCustomers addressArray.length ",qObj.addressArray.length)
     //console.log("handle callback queryAddresses addressArray[0].city ",addressArray[0].city)
     var cust_coll = qObj.db.collection('m3-customer')
-    var customers = cust_coll.find().skip(qObj.from).limit(qObj.to-qObj.from)
+    var customers = cust_coll.find().skip(qObj.from).limit(qObj.to-qObj.from+1)
     var count = 0
     var addressArray = qObj.addressArray
     
-    function updateCustomer(collection, customer, address, callback) {
+    function updateCustomer(collection, customer, address) {
         // Get the m3-customer collection
         var collection = qObj.db.collection('m3-customer')
         collection.update(
             { _id: customer._id }
-            , {$set: {country : address.country, city: address.city}}
+            , {$set: {country : address.country, city: address.city, state: address.state, phone: address.phone}}
             ,(error, result) => {
                 if (error) return process.exit(1)
-                console.log(result.result.n) // will be 1
-                console.log(`Updated the customer document where _id = ${customer._id}`)
-                callback(result)
+                //console.log(result.result.n) // will be 1
+                //console.log(`Updated the customer document where _id = ${customer._id}`)
             }
         )
     }
@@ -78,15 +81,18 @@ QueryObject.prototype.updateCustomers = function (qObj){
             // Called zero or more times, once per document in result set
             address = addressArray[count]
             if (customer && address) {
-                console.log("cust.id = ",customer.id," address.city = ",address.city)
+                //console.log("cust.id = ",customer.id," address.city = ",address.city)
                 //console.log("customers :: ",customers)
-                updateCustomer(customers, customer, address, (res) => {
-                    console.log("customer updated ", res.result)
-                })
+                updateCustomer(customers, customer, address)
             } else {
                 console.log("cust is null ?!?!?")
             }
             count++
+            //console.log("count=",count," addressArray.length=",addressArray.length)
+            if (count == addressArray.length) {
+                console.log(`From updateCustomers - Updated Customers from ${qObj.from} to ${qObj.to}`)
+                callback(`Calling back - Updated Customers from ${qObj.from} to ${qObj.to}`)
+            }
         }
     , function(err){
         // Called exactly once, after all documents have been iterated over, or when there is an error
@@ -100,7 +106,7 @@ QueryObject.prototype.updateCustomers = function (qObj){
 QueryObject.prototype.updateDocuments = function(callback) {
     // Get the collections
     var address_coll = this.db.collection('m3-customer-address')
-    var addresses = address_coll.find().skip(this.from).limit(this.to-this.from)
+    var addresses = address_coll.find().skip(this.from).limit(this.to-this.from+1)
 
     this.setAddresses(addresses)
 
@@ -112,7 +118,7 @@ QueryObject.prototype.updateDocuments = function(callback) {
 
 
 
-    this.queryAddresses(this, this.updateCustomers)
+    this.queryAddresses(this, this.updateCustomers, callback)
         
     //console.log("out from callback queryAddresses :: addressArray.length=",this.addressArray.length)
 
@@ -126,7 +132,8 @@ QueryObject.prototype.updateDocuments = function(callback) {
     
     //callback(null, cust.id)
     //callback(null, result)
-    callback(null, `${this.from} to ${this.to}`)
+    
+    //callback(null, `${this.from} to ${this.to}`)
 }
 //Set the Starting Point of the Result Set¶
 //db.bios.find().skip( 5 )
@@ -165,7 +172,7 @@ mongodb.MongoClient.connect(url, (err, client) => {
         // optional callback
         function(error, results) {
             if (error) console.error(error)
-            console.log(results)
+            console.log(`from parallel ${results}`)
             //client.close()
         }
     )
