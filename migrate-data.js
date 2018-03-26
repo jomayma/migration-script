@@ -60,6 +60,7 @@ QueryObject.prototype.updateCustomers = function (qObj, callback){
     var cust_coll = qObj.db.collection('m3-customer')
     var customers = cust_coll.find().skip(qObj.from).limit(qObj.to-qObj.from+1)
     var count = 0
+    var nUpdated = 0
     var addressArray = qObj.addressArray
     
     function updateCustomer(collection, customer, address) {
@@ -72,6 +73,12 @@ QueryObject.prototype.updateCustomers = function (qObj, callback){
                 if (error) return process.exit(1)
                 //console.log(result.result.n) // will be 1
                 //console.log(`Updated the customer document where _id = ${customer._id}`)
+                //console.log("count=",count," addressArray.length=",addressArray.length)
+                nUpdated++
+                if (nUpdated == addressArray.length) {
+                    console.log(`From updateCustomers - Updated Customers from ${qObj.from} to ${qObj.to}`)
+                    callback(`Calling back - Updated Customers from ${qObj.from} to ${qObj.to}`)
+                }
             }
         )
     }
@@ -88,11 +95,6 @@ QueryObject.prototype.updateCustomers = function (qObj, callback){
                 console.log("cust is null ?!?!?")
             }
             count++
-            //console.log("count=",count," addressArray.length=",addressArray.length)
-            if (count == addressArray.length) {
-                console.log(`From updateCustomers - Updated Customers from ${qObj.from} to ${qObj.to}`)
-                callback(`Calling back - Updated Customers from ${qObj.from} to ${qObj.to}`)
-            }
         }
     , function(err){
         // Called exactly once, after all documents have been iterated over, or when there is an error
@@ -167,13 +169,18 @@ mongodb.MongoClient.connect(url, (err, client) => {
        )
     }
 
+    var nWorkers = objArr.length
+    var nWorkersFinish = 0
     parallel(
         objArr,
         // optional callback
         function(error, results) {
             if (error) console.error(error)
             console.log(`from parallel ${results}`)
-            //client.close()
+            nWorkersFinish++
+            if (nWorkersFinish = nWorkers) {
+                client.close()
+            }
         }
     )
 
