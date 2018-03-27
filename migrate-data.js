@@ -133,9 +133,10 @@ mongodb.MongoClient.connect(url, (err, client) => {
         // optional callback
         function(error, results) {
             if (error) console.error(error)
-            console.log(`from parallel ${results}`)
             nWorkersFinish++
+            console.log(`From parallel, results=${results} with ${nWorkers} Workers and ${nWorkersFinish} Workers Finished`)
             if (nWorkersFinish = nWorkers) {
+                console.log("Closing connection.")
                 client.close()
             }
         }
