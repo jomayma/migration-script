@@ -32,8 +32,6 @@ QueryObject.prototype.setInterval = function(f,t) {
 QueryObject.prototype.setAddresses = function(a) {
     this.addresses = a
 }
-
-
 QueryObject.prototype.queryAddresses = function (qObj, innercallback, callback) {
     coll = qObj.addresses
     coll.toArray(function(error,addArr) {
@@ -41,22 +39,18 @@ QueryObject.prototype.queryAddresses = function (qObj, innercallback, callback) 
             console.error(error)
         } else if (addArr.length > 0) {
             qObj.addressArray=addArr
-            //console.log("in queryAddresses addArr.length ",addArr.length)
             console.log("Into QueryObject.prototype.queryAddresses from "
             ,qObj.from," to ", qObj.to," addressArray.length ",qObj.addressArray.length
             , " addressArray[0].city=",qObj.addressArray[0].city
-            , " addressArray[1].city=",qObj.addressArray[1].city
-            , " addressArray[",range-2,"].city=",qObj.addressArray[range-2].city
+            //, " addressArray[1].city=",qObj.addressArray[1].city
+            //, " addressArray[",range-2,"].city=",qObj.addressArray[range-2].city
             , " addressArray[",range-1,"].city=",qObj.addressArray[range-1].city)
-            console.log()
             innercallback(qObj, callback)
         }
     })
 }
-
 QueryObject.prototype.updateCustomers = function (qObj, callback){
     console.log("handle callback updateCustomers addressArray.length ",qObj.addressArray.length)
-    //console.log("handle callback queryAddresses addressArray[0].city ",addressArray[0].city)
     var cust_coll = qObj.db.collection('m3-customer')
     var customers = cust_coll.find().skip(qObj.from).limit(qObj.to-qObj.from+1)
     var count = 0
@@ -84,64 +78,33 @@ QueryObject.prototype.updateCustomers = function (qObj, callback){
     }
 
     customers.forEach(
-        function(customer){
+      function(customer){
             // Called zero or more times, once per document in result set
             address = addressArray[count]
             if (customer && address) {
-                //console.log("cust.id = ",customer.id," address.city = ",address.city)
-                //console.log("customers :: ",customers)
                 updateCustomer(customers, customer, address)
             } else {
                 console.log("cust is null ?!?!?")
             }
             count++
-        }
+      }
     , function(err){
         // Called exactly once, after all documents have been iterated over, or when there is an error
         if (err) {
             console.log("err = ",err)
         }
-        //updateCustomer(customers, cust, addressArray[count], callbackUpdate)
-     })
+      }
+    )
 }
-
 QueryObject.prototype.updateDocuments = function(callback) {
     // Get the collections
     var address_coll = this.db.collection('m3-customer-address')
     var addresses = address_coll.find().skip(this.from).limit(this.to-this.from+1)
-
-    this.setAddresses(addresses)
-
     var customer, address
 
-    function callbackUpdate(result) {
-        console.log(`callbackUpdate - Updated the customer document where _id = ${result._id}`)
-    }
-
-
-
+    this.setAddresses(addresses)
     this.queryAddresses(this, this.updateCustomers, callback)
-        
-    //console.log("out from callback queryAddresses :: addressArray.length=",this.addressArray.length)
-
-        /*
-        cust_coll.update({_id: customer._id}, { $set: adress }, (error, result) => {
-            if (error) callback(error, null)
-            console.log(result.result.n) // will be 1
-            console.log(`Updated the customer where id = ${id}`)
-        })
-        */
-    
-    //callback(null, cust.id)
-    //callback(null, result)
-    
-    //callback(null, `${this.from} to ${this.to}`)
 }
-//Set the Starting Point of the Result Set¶
-//db.bios.find().skip( 5 )
-
-//Limit the Number of Documents to Return¶
-//db.bios.find().limit( 5 )
 
 // Use connect method to connect to the Server
 mongodb.MongoClient.connect(url, (err, client) => {
@@ -162,9 +125,6 @@ mongodb.MongoClient.connect(url, (err, client) => {
         function(callback) {
             let q = qo
             q.updateDocuments(callback)
-            //setTimeout(function() {
-            //callback(null, `merged from ${q.from} to ${q.to}`)
-            //}, q.from)
         }
        )
     }
@@ -183,5 +143,4 @@ mongodb.MongoClient.connect(url, (err, client) => {
             }
         }
     )
-
 })
