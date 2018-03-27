@@ -32,7 +32,7 @@ QueryObject.prototype.setInterval = function(f,t) {
 QueryObject.prototype.setAddresses = function(a) {
     this.addresses = a
 }
-QueryObject.prototype.queryAddresses = function (qObj, innercallback, callback) {
+QueryObject.prototype.queryAddresses = function (qObj, callback) {
     coll = qObj.addresses
     coll.toArray(function(error,addArr) {
         if (error) {
@@ -45,7 +45,7 @@ QueryObject.prototype.queryAddresses = function (qObj, innercallback, callback) 
             //, " addressArray[1].city=",qObj.addressArray[1].city
             //, " addressArray[",range-2,"].city=",qObj.addressArray[range-2].city
             , " addressArray[",range-1,"].city=",qObj.addressArray[range-1].city)
-            innercallback(qObj, callback)
+            qObj.updateCustomers(qObj, callback)
         }
     })
 }
@@ -65,9 +65,6 @@ QueryObject.prototype.updateCustomers = function (qObj, callback){
             , {$set: {country : address.country, city: address.city, state: address.state, phone: address.phone}}
             ,(error, result) => {
                 if (error) return process.exit(1)
-                //console.log(result.result.n) // will be 1
-                //console.log(`Updated the customer document where _id = ${customer._id}`)
-                //console.log("count=",count," addressArray.length=",addressArray.length)
                 nUpdated++
                 if (nUpdated == addressArray.length) {
                     console.log(`From updateCustomers - Updated Customers from ${qObj.from} to ${qObj.to}`)
@@ -103,7 +100,7 @@ QueryObject.prototype.updateDocuments = function(callback) {
     var customer, address
 
     this.setAddresses(addresses)
-    this.queryAddresses(this, this.updateCustomers, callback)
+    this.queryAddresses(this, callback)
 }
 
 // Use connect method to connect to the Server
