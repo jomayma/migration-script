@@ -46,8 +46,8 @@ QueryObject.prototype.queryAddresses = function (qObj, innercallback, callback) 
             ,qObj.from," to ", qObj.to," addressArray.length ",qObj.addressArray.length
             , " addressArray[0].city=",qObj.addressArray[0].city
             , " addressArray[1].city=",qObj.addressArray[1].city
-            , " addressArray[98].city=",qObj.addressArray[98].city
-            , " addressArray[99].city=",qObj.addressArray[99].city)
+            , " addressArray[",range-2,"].city=",qObj.addressArray[range-2].city
+            , " addressArray[",range-1,"].city=",qObj.addressArray[range-1].city)
             console.log()
             innercallback(qObj, callback)
         }
