@@ -15,7 +15,7 @@ if (process.argv.length > 2) {
 } else {
     range = 100
 }
-console.log(range)
+console.log(`${range} Customer records to update by Worker...`)
 
 // QueryObject - Superclass
 function QueryObject(db){
@@ -39,25 +39,25 @@ QueryObject.prototype.queryAddresses = function (qObj, callback) {
             console.error(error)
         } else if (addArr.length > 0) {
             qObj.addressArray=addArr
-            console.log("Into QueryObject.prototype.queryAddresses from "
-            ,qObj.from," to ", qObj.to," addressArray.length ",qObj.addressArray.length
-            , " addressArray[0].city=",qObj.addressArray[0].city
+            //console.log("Into QueryObject.prototype.queryAddresses from "
+            //,qObj.from," to ", qObj.to," addressArray.length ",qObj.addressArray.length
+            //, " addressArray[0].city=",qObj.addressArray[0].city
             //, " addressArray[1].city=",qObj.addressArray[1].city
             //, " addressArray[",range-2,"].city=",qObj.addressArray[range-2].city
-            , " addressArray[",range-1,"].city=",qObj.addressArray[range-1].city)
+            //, " addressArray[",range-1,"].city=",qObj.addressArray[range-1].city)
             qObj.updateCustomers(qObj, callback)
         }
     })
 }
 QueryObject.prototype.updateCustomers = function (qObj, callback){
-    console.log("handle callback updateCustomers addressArray.length ",qObj.addressArray.length)
+    //console.log("handle callback updateCustomers addressArray.length ",qObj.addressArray.length)
     var cust_coll = qObj.db.collection('m3-customer')
     var customers = cust_coll.find().skip(qObj.from).limit(qObj.to-qObj.from+1)
     var count = 0
     var nUpdated = 0
     var addressArray = qObj.addressArray
     
-    function updateCustomer(collection, customer, address) {
+    function updateCustomer(customer, address) {
         // Get the m3-customer collection
         var collection = qObj.db.collection('m3-customer')
         collection.update(
@@ -67,8 +67,8 @@ QueryObject.prototype.updateCustomers = function (qObj, callback){
                 if (error) return process.exit(1)
                 nUpdated++
                 if (nUpdated == addressArray.length) {
-                    console.log(`From updateCustomers - Updated Customers from ${qObj.from} to ${qObj.to}`)
-                    callback(`Calling back - Updated Customers from ${qObj.from} to ${qObj.to}`)
+                    //console.log(`From updateCustomers - Updated Customers from ${qObj.from} to ${qObj.to}`)
+                    callback(null,`from ${qObj.from} to ${qObj.to}`)
                 }
             }
         )
@@ -79,9 +79,9 @@ QueryObject.prototype.updateCustomers = function (qObj, callback){
             // Called zero or more times, once per document in result set
             address = addressArray[count]
             if (customer && address) {
-                updateCustomer(customers, customer, address)
+                updateCustomer(customer, address)
             } else {
-                console.log("cust is null ?!?!?")
+                console.log("Oops! customer is null ?!?!?")
             }
             count++
       }
@@ -97,7 +97,6 @@ QueryObject.prototype.updateDocuments = function(callback) {
     // Get the collections
     var address_coll = this.db.collection('m3-customer-address')
     var addresses = address_coll.find().skip(this.from).limit(this.to-this.from+1)
-    var customer, address
 
     this.setAddresses(addresses)
     this.queryAddresses(this, callback)
@@ -126,19 +125,15 @@ mongodb.MongoClient.connect(url, (err, client) => {
        )
     }
 
-    var nWorkers = objArr.length
-    var nWorkersFinish = 0
     parallel(
         objArr,
         // optional callback
+        // running once all the functions have completed 
         function(error, results) {
             if (error) console.error(error)
-            nWorkersFinish++
-            console.log(`From parallel, results=${results} with ${nWorkers} Workers and ${nWorkersFinish} Workers Finished`)
-            if (nWorkersFinish = nWorkers) {
-                console.log("Closing connection.")
-                client.close()
-            }
+            console.log(`parallel callback :: Finished Customers updating tasks, with ${objArr.length} Workers, ${results}`)
+            console.log("Closing connection.")
+            client.close()
         }
     )
 })
